@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>90-Day Progress Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #e5e5e5;
+    min-height: 100vh;
+    padding: 24px 16px;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    background: #111;
+    border: 1px solid #222;
+    border-radius: 16px;
+    padding: 28px;
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+  }
+  .badge {
+    background: #0a2540;
+    color: #4da3ff;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+  .section {
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1f1f1f;
+  }
+  .section:last-child { border-bottom: none; margin-bottom: 0; }
+  .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: #fff;
+  }
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 8px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+    border-radius: 8px;
+  }
+  .item:hover { background: #1a1a1a; }
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #444;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .item.done .checkbox {
+    background: #fff;
+    border-color: #fff;
+  }
+  .item.done .checkbox::after {
+    content: "✓";
+    color: #000;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .item.done .label {
+    text-decoration: line-through;
+    color: #666;
+  }
+  .label {
+    font-size: 15px;
+    color: #e5e5e5;
+    transition: color 0.2s;
+  }
+  .reset-btn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #1a1a1a;
+    color: #888;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { background: #222; color: #fff; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>90-day progress tracker</h1>
+      <div class="badge" id="badge">0/22 completed</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div id="tracker"></div>
+    <button class="reset-btn" onclick="resetAll()">Reset all progress</button>
+  </div>
+
+<script>
+const data = [
+  {
+    title: "Weeks 1–2",
+    items: [
+      "Learn HTML and CSS fundamentals",
+      "Set up Git, GitHub and VS Code",
+      "Create a basic portfolio page"
+    ]
+  },
+  {
+    title: "Weeks 3–4",
+    items: [
+      "Learn JavaScript variables, functions and arrays",
+      "Practise DOM manipulation",
+      "Build a calculator and to-do app"
+    ]
+  },
+  {
+    title: "Weeks 5–8",
+    items: [
+      "Learn ES6+ and asynchronous JavaScript",
+      "Understand APIs and JSON",
+      "Build a weather application"
+    ]
+  },
+  {
+    title: "Weeks 9–12",
+    items: [
+      "Start React",
+      "Learn components, props and hooks",
+      "Deploy one React project",
+      "Solve 20–30 beginner DSA problems"
+    ]
+  },
+  {
+    title: "College checklist",
+    items: [
+      "Create two DaVinci Resolve samples",
+      "Create one Blender product render",
+      "Build a portfolio website",
+      "Set up Contra profile",
+      "Set up Fiverr profile",
+      "Optimize LinkedIn profile",
+      "Contact first 10 potential clients",
+      "Get first paid project"
+    ]
+  }
+];
+
+const STORAGE_KEY = "tracker_state_v1";
+let state = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+function render() {
+  const tracker = document.getElementById("tracker");
+  tracker.innerHTML = "";
+  let total = 0, done = 0;
+
+  data.forEach((section, si) => {
+    const sec = document.createElement("div");
+    sec.className = "section";
+    const title = document.createElement("div");
+    title.className = "section-title";
+    title.textContent = section.title;
+    sec.appendChild(title);
+
+    section.items.forEach((item, ii) => {
+      const key = `${si}-${ii}`;
+      total++;
+      const isDone = !!state[key];
+      if (isDone) done++;
+
+      const row = document.createElement("div");
+      row.className = "item" + (isDone ? " done" : "");
+      row.innerHTML = `<div class="checkbox"></div><div class="label">${item}</div>`;
+      row.addEventListener("click", () => {
+        state[key] = !state[key];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        render();
+      });
+      sec.appendChild(row);
+    });
+
+    tracker.appendChild(sec);
+  });
+
+  const pct = total ? (done / total) * 100 : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("badge").textContent = `${done}/${total} completed`;
+}
+
+function resetAll() {
+  if (confirm("Reset all progress?")) {
+    state = {};
+    localStorage.removeItem(STORAGE_KEY);
+    render();
+  }
+}
+
+render();
+</script>
+</body>
+</html>
